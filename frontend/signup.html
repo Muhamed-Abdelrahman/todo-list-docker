@@ -3,41 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <title>Sign Up | Task Manager</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Sign Up</h1>
-        <form id="signup-form">
-            <input type="text" id="username" placeholder="Username" required><br><br>
-            <input type="password" id="password" placeholder="Password" required><br><br>
-            <button type="submit">Sign Up</button>
+        <h1>Create Account</h1>
+        
+        <form id="signup-form" class="auth-form">
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" placeholder="Choose a username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" placeholder="Create a password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password" class="form-label">Confirm Password</label>
+                <input type="password" id="confirm-password" placeholder="Repeat your password" required>
+            </div>
+            
+            <button type="submit" class="auth-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="icon">
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                </svg>
+                Sign Up
+            </button>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="/static/login.html" class="auth-link">Login</a></p>
+            </div>
         </form>
-        <p>Already have an account? <a href="/static/login.html">Login</a></p>
     </div>
+
+    <footer>
+        © FCAI FAYOUM UNIVERSITY | Task Management System
+    </footer>
+
     <script>
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+            
+            if (!username || !password || !confirmPassword) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="spinner"></div> Creating account...';
+
             try {
                 const response = await fetch('/signup', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({ username, password })
                 });
+                
                 const data = await response.json();
+                
                 if (response.ok) {
-                    alert('Sign up successful! Please login.');
-                    window.location.href = '/static/login.html';
+                    showAlert('Account created successfully! Redirecting to login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/static/login.html';
+                    }, 2000);
                 } else {
-                    alert(data.detail);
+                    showAlert(data.detail || 'Signup failed', 'error');
                 }
             } catch (error) {
-                alert('Error signing up');
+                showAlert('Error connecting to server', 'error');
+                console.error('Signup error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="icon">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                    </svg>
+                    Sign Up
+                `;
             }
         });
+
+        function showAlert(message, type) {
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) existingAlert.remove();
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const form = document.getElementById('signup-form');
+            form.insertBefore(alertDiv, form.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
     </script>
 </body>
 </html>

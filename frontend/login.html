@@ -3,41 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <title>Login | Task Manager</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Login</h1>
-        <form id="login-form">
-            <input type="text" id="username" placeholder="Username" required><br><br>
-            <input type="password" id="password" placeholder="Password" required><br><br>
-            <button type="submit">Login</button>
+        <h1>Welcome Back</h1>
+        
+        <form id="login-form" class="auth-form">
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" placeholder="Enter your username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            
+            <button type="submit" class="auth-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="icon">
+                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                </svg>
+                Login
+            </button>
+            
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/static/signup.html" class="auth-link">Sign Up</a></p>
+            </div>
         </form>
-        <p>Don't have an account? <a href="/static/signup.html">Sign Up</a></p>
     </div>
+
+    <footer>
+        © FCAI FAYOUM UNIVERSITY | Task Management System
+    </footer>
+
     <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="spinner"></div> Authenticating...';
+
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: { 
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
                     body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
                 });
+                
                 const data = await response.json();
+                
                 if (response.ok) {
                     localStorage.setItem('token', data.access_token);
                     window.location.href = '/static/index.html';
                 } else {
-                    alert(data.detail);
+                    showAlert(data.detail || 'Login failed', 'error');
                 }
             } catch (error) {
-                alert('Error logging in');
+                showAlert('Error connecting to server', 'error');
+                console.error('Login error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="icon">
+                        <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                    </svg>
+                    Login
+                `;
             }
         });
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const form = document.getElementById('login-form');
+            form.insertBefore(alertDiv, form.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
     </script>
 </body>
 </html>
